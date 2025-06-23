@@ -1,18 +1,26 @@
-from telegram import Update, InputMediaPhoto
-from telegram.ext import ApplicationBuilder, MessageHandler, ChatMemberHandler, filters, ContextTypes
+from telegram import Update
+from telegram.ext import (
+    ApplicationBuilder,
+    ChatMemberHandler,
+    MessageHandler,
+    ContextTypes,
+    filters,
+)
+
 import os
 
-# Replace with your bot token
-BOT_TOKEN = 'YOUR_BOT_TOKEN'
+# Get token from environment variable (safer)
+BOT_TOKEN = os.getenv("BOT_TOKEN")
 
-WELCOME_IMAGE = 'https://your-image-link.jpg'  # Replace with your uploaded image URL
+# Set your image URL here
+WELCOME_IMAGE = 'https://i.imgur.com/dQw4w9g.jpg'  # Replace this with your image URL
 
 async def welcome_user(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.chat_member.new_chat_member.status == "member":
         user = update.chat_member.new_chat_member.user
         name = user.first_name or "Friend"
         username = f"@{user.username}" if user.username else "Not Available"
-        
+
         welcome_text = f"""**ᴛᴏ ᴋᴀɪꜱᴇ ʜᴀɪɴ ᴀᴀᴘ ʟᴏɢ!** 😎
 
 ✲ 𝑵𝑨𝑴𝑬 ➟ {name}  
@@ -33,18 +41,16 @@ async def welcome_user(update: Update, context: ContextTypes.DEFAULT_TYPE):
             parse_mode="Markdown"
         )
 
-async def delete_join_leave(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def delete_system_join_leave(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
         await update.message.delete()
     except:
-        pass  # ignore if can't delete
+        pass
 
-app = ApplicationBuilder().token(BOT_TOKEN).build()
+if __name__ == "__main__":
+    app = ApplicationBuilder().token(BOT_TOKEN).build()
 
-# Handle join/leave message cleanup
-app.add_handler(MessageHandler(filters.StatusUpdate.NEW_CHAT_MEMBERS | filters.StatusUpdate.LEFT_CHAT_MEMBER, delete_join_leave))
+    app.add_handler(ChatMemberHandler(welcome_user, ChatMemberHandler.CHAT_MEMBER))
+    app.add_handler(MessageHandler(filters.StatusUpdate.NEW_CHAT_MEMBERS | filters.StatusUpdate.LEFT_CHAT_MEMBER, delete_system_join_leave))
 
-# Handle welcome
-app.add_handler(ChatMemberHandler(welcome_user, ChatMemberHandler.CHAT_MEMBER))
-
-app.run_polling()
+    app.run_polling()
